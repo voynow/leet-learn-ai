@@ -1,5 +1,5 @@
 import streamlit as st
-from llm_blocks import block_factory
+from llm_blocks import block_factory, blocks
 
 # Constants and Config
 PAGE_TITLE = "LeetLearn.ai"
@@ -38,10 +38,21 @@ def show_page():
         display_landing_page()
 
 
+def introduce_ai():
+    intro_message = (
+        "Hello! I am LeetLearn AI. What are we working on today?"
+    )
+    add_message(BOT_ROLE, intro_message)
+
+
 def display_landing_page():
     st.title("Welcome to LeetLearn.ai 🧪")
     st.write("Interact with our advanced AI for insights, help, and more.")
-    if st.button("Proceed to Chat"):
+    api_key = st.text_input("OpenAI API key:", type="password")
+    if api_key:
+        blocks.set_api_key(api_key)
+        st.session_state["api_key"] = api_key
+        introduce_ai()
         st.session_state.show_chat = True
         st.experimental_rerun()
 
