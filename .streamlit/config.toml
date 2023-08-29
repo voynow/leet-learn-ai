@@ -1,0 +1,7 @@
+[theme]
+base="dark"
+primaryColor="#FF5733"  # Neon Orange-Red
+backgroundColor="#1E1E1E"  # Nearly Black
+secondaryBackgroundColor="#2C2C2C"  # Dark Gray
+textColor="#F5F5F5"  # Bright White
+font="monospace"
