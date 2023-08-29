@@ -56,3 +56,8 @@ if query := st.chat_input("Enter your query here"):
         response = stream_response()
     
     add_message(BOT_ROLE, response)
+
+# Add Sidebar and Dropdown
+sidebar_title = st.sidebar.title("Options Dropdown")
+options = ["Option A", "Option B", "Option C", "Option D", "Option E", "Option F", "Option G"]
+selected_option = st.sidebar.selectbox("Choose an option:", options)
