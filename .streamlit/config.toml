@@ -1,0 +1,7 @@
+[theme]
+base="dark"
+primaryColor="#FF5733"  # Neon Red
+backgroundColor="#FAF3E0"  # Soft Yellow
+secondaryBackgroundColor="#F7E8AA"  # Slightly Darker Yellow
+textColor="#333333"  # Almost Black
+font="sans serif"

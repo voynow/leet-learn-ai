@@ -1,10 +1,22 @@
 import streamlit as st
 from llm_blocks import block_factory
 
-PAGE_TITLE = "🧪🤖 Chat using LLM Blocks"
+PAGE_TITLE = "🧪 LeetLearn.ai"
 USER_ROLE = "user"
 BOT_ROLE = "assistant"
 
+
+st.set_page_config(
+    page_title="LeetLearn.ai",
+    page_icon="🧪",
+    layout="wide",
+    initial_sidebar_state="expanded",
+    menu_items={
+        'Get Help': 'https://www.extremelycoolapp.com/help',
+        'Report a bug': "https://www.extremelycoolapp.com/bug",
+        'About': "# This is a header. This is an *extremely* cool app!"
+    }
+)
 
 def add_message(role, content):
     st.session_state['messages'].append({"role": role, "content": content})
@@ -27,6 +39,8 @@ if 'block' not in st.session_state:
 
 if 'messages' not in st.session_state:
     st.session_state.messages = []
+    initial_message = "Hi, I'm LeetLearn's AI assistant. What can I help you with today?"
+    add_message(BOT_ROLE, initial_message)
 
 for message in st.session_state.messages:
     with st.chat_message(message['role']):
