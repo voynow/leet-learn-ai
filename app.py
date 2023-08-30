@@ -28,6 +28,7 @@ def initialize_state():
             logging.info(f"Initializing state: {key}={value}")
             st.session_state[key] = value
 
+
 def add_message(role, content):
     """Add a message to the state"""
     logging.info(f"Adding message from {role}: {content[:50]}...")
@@ -60,41 +61,57 @@ def solutions_interface(solutions):
         handle_chat(selected_option)
 
 
-def display_messages():
-    """Display chat messages"""
-    for message in st.session_state.messages:
-        logging.info(f"Displaying message from {message['role']}: {message['content'][:50]}...")
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+def manage_messages():
+    """Manage the display of chat messages"""
+    message_placeholders = []
+    
+    # Create placeholders for existing messages
+    for _ in st.session_state.messages:
+        message_placeholders.append(st.empty())
+    
+    # Populate the placeholders with existing messages
+    for idx, message in enumerate(st.session_state.messages):
+        with message_placeholders[idx].chat_message(message['role']):
+            message_placeholders[idx].markdown(message['content'])
+    
+    return message_placeholders
 
-
-def stream_response():
+def stream_response(message_placeholder):
     """Stream chat response from AI"""
     full_response = ""
     for response in st.session_state.block.completion_handler.create_completion(
         st.session_state.block
     ):
         full_response += response.choices[0].delta.get("content", "")
+        message_placeholder.markdown(full_response + "▌")
+    message_placeholder.markdown(full_response)
     return full_response
 
-
-def handle_chat(query):
+def handle_chat(query, message_placeholders):
     """Handle a chat interaction"""
     add_message("user", query)
-    response = stream_response()
+    
+    # Create a placeholder for assistant's message at the end of the list
+    assistant_message_placeholder = st.empty()
+    with assistant_message_placeholder.chat_message("assistant"):
+        assistant_message_placeholder.markdown("...")
+        
+    response = stream_response(assistant_message_placeholder)
     add_message("assistant", response)
+
 
 def display_chat_interface(solutions):
     """Display the main chat interface"""
     logging.info("Displaying chat interface...")
     st.title("LeetLearn.ai")
     solutions_interface(solutions)
+    
     user_input = st.chat_input("Enter your query here")
     
     if user_input:
-        handle_chat(user_input)
-        
-    display_messages()
+        handle_chat(user_input, manage_messages())
+    else:
+        manage_messages()
 
 
 def run_app():
