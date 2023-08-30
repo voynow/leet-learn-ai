@@ -57,7 +57,7 @@ def solutions_interface(solutions):
         and selected_option != st.session_state.last_selected
     ):
         st.session_state.last_selected = selected_option
-        add_message("user", selected_option)
+        handle_chat(selected_option)
 
 
 def display_messages():
