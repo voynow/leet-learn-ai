@@ -1,3 +1,4 @@
+import logging
 import json
 import streamlit as st
 
@@ -12,29 +13,33 @@ Preserve Autonomy: Allow users to ponder solutions first. Be VERY conservative w
 Never Reveal Answers: Challenge and support, but don't take away the opportunity to learn.
 """
 
+logging.basicConfig(level=logging.INFO)
+
 
 def initialize_state():
-    """Initialize Streamlit session state"""
-    if "show_chat" not in st.session_state:
-        st.session_state.show_chat = False
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    if "last_selected" not in st.session_state:
-        st.session_state.last_selected = None
-    if "block" not in st.session_state:
-        st.session_state.block = block_factory.get(
-            "chat", stream=True, system_message=SYS_MESSAGE
-        )
+    """Initialize Streamlit session state."""
+    logging.info("Initializing state...")
+    initial_state = {
+        "show_chat": False,
+        "messages": [],
+        "last_selected": None,
+        "block": block_factory.get("chat", stream=True, system_message=SYS_MESSAGE),
+    }
+    for key, value in initial_state.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
 
 
 def add_message(role, content):
     """Add a message to the state"""
+    logging.info(f"Adding message from {role}: {content[:50]}...")
     st.session_state.messages.append({"role": role, "content": content})
     st.session_state.block.message_handler.add_message(role, content)
 
 
 def display_landing_page():
     """Display the landing page"""
+    logging.info("Displaying landing page...")
     st.title("Welcome to LeetLearn.ai 🧪")
     api_key = st.text_input("OpenAI API key:", type="password")
     if api_key:
@@ -46,6 +51,7 @@ def display_landing_page():
 
 def solutions_interface(solutions):
     """Manage the solutions dropdown"""
+    logging.info("Displaying solutions interface...")
     options = ["Select an option..."] + solutions["name"]
     selected_option = st.sidebar.selectbox("Choose an option:", options)
     if (
@@ -58,6 +64,7 @@ def solutions_interface(solutions):
 
 def display_messages():
     """Display chat messages"""
+    logging.info("Displaying messages...")
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -65,6 +72,7 @@ def display_messages():
 
 def stream_response():
     """Stream chat response from AI"""
+    logging.info("Streaming response...")
     full_response = ""
     for response in st.session_state.block.completion_handler.create_completion(
         st.session_state.block
@@ -75,12 +83,14 @@ def stream_response():
 
 def handle_chat(query):
     """Handle a chat interaction"""
+    logging.info(f"Handling chat interaction: {query[:50]}...")
     add_message("user", query)
     add_message("assistant", stream_response())
 
 
 def display_chat_interface(solutions):
     """Display the main chat interface"""
+    logging.info("Displaying chat interface...")
     st.title("LeetLearn.ai")
     solutions_interface(solutions)
     display_messages()
@@ -91,6 +101,7 @@ def display_chat_interface(solutions):
 
 def run_app():
     """Main function to run the app"""
+    logging.info("Running app...")
     initialize_state()
     solutions = json.loads(open("data/solutions.json").read())
 
