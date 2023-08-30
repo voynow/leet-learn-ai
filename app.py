@@ -17,8 +17,6 @@ logging.basicConfig(level=logging.INFO)
 
 
 def initialize_state():
-    """Initialize Streamlit session state."""
-    logging.info("Initializing state...")
     initial_state = {
         "show_chat": False,
         "messages": [],
@@ -27,8 +25,8 @@ def initialize_state():
     }
     for key, value in initial_state.items():
         if key not in st.session_state:
+            logging.info(f"Initializing state: {key}={value}")
             st.session_state[key] = value
-
 
 def add_message(role, content):
     """Add a message to the state"""
@@ -64,15 +62,14 @@ def solutions_interface(solutions):
 
 def display_messages():
     """Display chat messages"""
-    logging.info("Displaying messages...")
     for message in st.session_state.messages:
+        logging.info(f"Displaying message from {message['role']}: {message['content'][:50]}...")
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
 
 def stream_response():
     """Stream chat response from AI"""
-    logging.info("Streaming response...")
     full_response = ""
     for response in st.session_state.block.completion_handler.create_completion(
         st.session_state.block
@@ -83,25 +80,25 @@ def stream_response():
 
 def handle_chat(query):
     """Handle a chat interaction"""
-    logging.info(f"Handling chat interaction: {query[:50]}...")
     add_message("user", query)
-    add_message("assistant", stream_response())
-
+    response = stream_response()
+    add_message("assistant", response)
 
 def display_chat_interface(solutions):
     """Display the main chat interface"""
     logging.info("Displaying chat interface...")
     st.title("LeetLearn.ai")
     solutions_interface(solutions)
-    display_messages()
     user_input = st.chat_input("Enter your query here")
+    
     if user_input:
         handle_chat(user_input)
+        
+    display_messages()
 
 
 def run_app():
     """Main function to run the app"""
-    logging.info("Running app...")
     initialize_state()
     solutions = json.loads(open("data/solutions.json").read())
 
