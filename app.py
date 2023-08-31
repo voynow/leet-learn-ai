@@ -34,9 +34,15 @@ def initialize_app():
         st.session_state.messages = []
     if "current_selection" not in st.session_state:
         st.session_state.current_selection = None
+    if "clear_chat" not in st.session_state:
+        st.session_state.clear_chat = False
 
 
 def add_message(role, content):
+    """
+    Messages are duplicated in the session state and the block. Session state
+    message are for displaying whereas block messages are for the AI
+    """
     st.session_state["messages"].append({"role": role, "content": content})
     st.session_state["block"].message_handler.add_message(role, content)
 
@@ -74,22 +80,6 @@ def stream_response():
     return full_response
 
 
-def setup_sidebar():
-    st.sidebar.title("Options Dropdown")
-    options = [None] + solutions["name"]
-    selected_option = st.sidebar.selectbox(
-        label="Choose an option:", options=options, key='selection'
-    )
-    return selected_option
-
-
-def display_messages():
-    logging.info(f"Displaying {len(st.session_state.messages)} messages")
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-
-
 def handle_chat(query):
     add_message(USER_ROLE, query)
     with st.chat_message(USER_ROLE):
@@ -99,30 +89,49 @@ def handle_chat(query):
     add_message(BOT_ROLE, response)
 
 
-def handle_selected_option(selected_option):
+def setup_sidebar():
+    """Set up the sidebar with selectable options."""
+    st.sidebar.title("Options Dropdown")
+    options = [None] + solutions["name"]
+    return st.sidebar.selectbox(label="Choose an option:", options=options, key='selection')
+
+
+def display_messages():
+    """Display the chat messages."""
+    logging.info(f"Displaying {len(st.session_state.messages)} messages")
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+
+def handle_new_selection(selected_option):
+    """Clear chat and handle new sidebar selection."""
+    logging.info("New selection made, clearing chat and rerunning.")
+    st.session_state.messages = []
     st.session_state.current_selection = selected_option
-    logging.info(f"Selected option: {selected_option}")
     handle_chat(selected_option)
     st.experimental_rerun()
 
 
-def handle_user_input():
-    user_input = st.chat_input("Enter your query here")
-    if user_input:
-        logging.info(f"User input: {user_input}")
-        handle_chat(user_input)
-
-
 def display_chat_interface():
+    """Main function to display the chat interface."""
+
+    # Handle sidebar and check for new selections
+    selected_option = setup_sidebar()
+    selection_change = st.session_state.current_selection != selected_option
+
+    if selection_change and selected_option is not None:
+        handle_new_selection(selected_option)
+        return
+
+    # Display main interface
     st.title(PAGE_TITLE)
     display_messages()
-    selected_option = setup_sidebar()
 
-    selection_change = st.session_state.current_selection != selected_option
-    if selected_option is not None and selection_change:
-        handle_selected_option(selected_option)
-    else:
-        handle_user_input()
+    # Handle user input
+    user_input = st.chat_input("Enter your query here")
+    if user_input:
+        handle_chat(user_input)
 
 
 def show_page():
