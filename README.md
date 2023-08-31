@@ -1,61 +1,25 @@
 # LeetLearn.ai 🧠
 
-LeetLearn.ai is an interactive AI-powered interview preparation tool designed to simulate the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc. It is built using Python and Streamlit, and leverages the power of OpenAI's GPT-4 model.
-
-## 📚 Table of Contents
-- [Why Use LeetLearn.ai](#why-use-leetlearnai-)
-- [Repo Structure](#repo-structure-)
-- [Installation](#installation-)
-- [Usage](#usage-)
-- [Contributing](#contributing-)
+LeetLearn.ai is an interactive AI-powered platform designed to assist users in preparing for coding interviews. The application is built using Streamlit and leverages the power of OpenAI's GPT-4 model to provide insightful and helpful responses to user queries.
 
 ## Why Use LeetLearn.ai? 🎯
 
-LeetLearn.ai is designed to provide a unique, interactive, and personalized interview preparation experience. It uses advanced AI to provide insights, help, and more, all while ensuring the user's time is valued. The AI never reveals answers, instead, it provides hints and encourages the user to think through the problem. This makes LeetLearn.ai an excellent tool for anyone preparing for technical interviews.
+LeetLearn.ai is designed to simulate the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc. It provides a unique and interactive way to prepare for coding interviews. The AI assistant is designed to be concise, focused, and conservative with hints, providing an optimal learning experience.
 
-## Repo Structure 📂
+## Getting Started 🚀
 
-```
-.
-├── .streamlit
-│   └── config.toml
-├── requirements.txt
-└── src
-    └── app.py
-```
+To get started with LeetLearn.ai, navigate to [https://leet-learn-ai.streamlit.app/](https://leet-learn-ai.streamlit.app/) and enter your OpenAI API key. The application will then initialize and you can start interacting with the AI.
 
-- `.streamlit/config.toml`: Contains the theme configuration for the Streamlit app.
-- `requirements.txt`: Lists the Python dependencies required by the app.
-- `src/app.py`: The main application script.
+## Features 🎁
 
-## Installation 💻
-
-To install the required dependencies, run the following command:
-
-```bash
-pip install -r requirements.txt
-```
-
-## Usage 🚀
-
-To start the application run the following command:
-
-```bash
-streamlit run src/app.py
-```
-
-This will start the Streamlit server and the application will be accessible at `localhost:8501`.
+- **Interactive AI Assistant**: The AI assistant provides helpful responses to user queries, guiding them through coding problems without revealing the answers.
+- **Customizable Theme**: The application comes with a dark theme that can be customized using the `config.toml` file.
+- **Streamlit Integration**: The application is built using Streamlit, making it easy to deploy and share.
 
 ## Contributing 🤝
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a pull request.
 
 ## License 📄
 
 This project is licensed under the terms of the MIT license.
-
-## Contact 📧
-
-If you have any questions, feel free to reach out to us at leetlearn.ai@gmail.com.
-
-Happy Coding! 💻
