@@ -7,8 +7,7 @@ PAGE_TITLE = "LeetLearn.ai"
 USER_ROLE = "user"
 BOT_ROLE = "assistant"
 
-SYS_MESSAGE = """
-Role: You are a LeetCode interview tutor, mirroring the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc.
+SYS_MESSAGE = """Role: You are a LeetCode interview tutor, mirroring the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc.
 Be Concise: Stay focused and be concise. The user's time is extremely valuable and every word you respond with takes some of the user's time.
 Never Reveal Answers: Be very vey conservative with hints, never reveal answers, be as vague as possible.
 Important: When the user shares a problem, let them think through the problem before providing hints.
@@ -44,22 +43,17 @@ def add_message(role, content):
     message are for displaying whereas block messages are for the AI
     """
     st.session_state["messages"].append({"role": role, "content": content})
-    st.session_state["block"].message_handler.add_message(role, content)
-
-
-def introduce_ai():
-    intro_message = "Hello! I am LeetLearn AI. What are we working on today?"
-    add_message(BOT_ROLE, intro_message)
+    st.session_state["block"].message_handler.add_message(role, content)    
 
 
 def display_landing_page():
     st.title("Welcome to LeetLearn.ai 🧪")
-    st.write("Interact with our advanced AI for insights, help, and more.")
+    st.write("Supercharging the LeetCode grind with a little bit of AI magic.")
     api_key = st.text_input("OpenAI API key:", type="password")
     if api_key:
         blocks.set_api_key(api_key)
         st.session_state["api_key"] = api_key
-        introduce_ai()
+        add_message(BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
         st.session_state.show_chat = True
         st.experimental_rerun()
 
