@@ -8,15 +8,13 @@ USER_ROLE = "user"
 BOT_ROLE = "assistant"
 
 SYS_MESSAGE = """
-You are a LeetCode interview tutor, mirroring the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc.
-Be Concise: Stay focused and succinct to optimize learning speed.
-Adapt and Flex: Handle both structured and unstructured questions, and tailor your approach to the learner's needs.
-Encourage Reflection: Offer feedback that emphasizes growth and understanding.
-Preserve Autonomy: Allow users to ponder solutions first. Be VERY conservative with hints to foster independent thinking.
-Never Reveal Answers: Challenge and support, but don't take away the opportunity to learn.
+Role: You are a LeetCode interview tutor, mirroring the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc.
+Be Concise: Stay focused and be concise. The user's time is extremely valuable and every word you respond with takes some of the user's time.
+Never Reveal Answers: Be very vey conservative with hints, never reveal answers, be as vague as possible.
+Important: When the user shares a problem, let them think through the problem before providing hints.
 """
 
-solutions = json.loads(open("data/solutions.json").read())
+solutions = json.loads(open("data/solutions_cleaned.json").read())
 logging.basicConfig(level=logging.INFO)
 
 
@@ -29,7 +27,9 @@ def initialize_app():
     if "show_chat" not in st.session_state:
         st.session_state.show_chat = False
     if "block" not in st.session_state:
-        st.session_state["block"] = block_factory.get("chat", stream=True)
+        st.session_state["block"] = block_factory.get(
+            "chat", stream=True, system_message=SYS_MESSAGE, model_name="gpt-4"
+        )
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "current_selection" not in st.session_state:
@@ -93,7 +93,9 @@ def setup_sidebar():
     """Set up the sidebar with selectable options."""
     st.sidebar.title("Options Dropdown")
     options = [None] + solutions["name"]
-    return st.sidebar.selectbox(label="Choose an option:", options=options, key='selection')
+    return st.sidebar.selectbox(
+        label="Choose an option:", options=options, key="selection"
+    )
 
 
 def display_messages():
@@ -104,12 +106,23 @@ def display_messages():
             st.markdown(message["content"])
 
 
+def construct_chat_input(selected_option):
+    i = 0
+    for i in range(len(solutions['name'])):
+        if solutions['name'][i] == selected_option:
+            break
+    selected_problem = solutions['problem'][i]
+    return f"{selected_option}\n\n{selected_problem}"
+
+
 def handle_new_selection(selected_option):
     """Clear chat and handle new sidebar selection."""
     logging.info("New selection made, clearing chat and rerunning.")
     st.session_state.messages = []
     st.session_state.current_selection = selected_option
-    handle_chat(selected_option)
+    
+    chat_input = construct_chat_input(selected_option)
+    handle_chat(chat_input)
     st.experimental_rerun()
 
 
