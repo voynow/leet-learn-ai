@@ -1,3 +1,4 @@
+import base64
 import json
 import logging
 import streamlit as st
@@ -21,6 +22,7 @@ def initialize_app():
     st.set_page_config(
         page_title=PAGE_TITLE,
         page_icon="🧪",
+        layout="wide",
         initial_sidebar_state="expanded",
     )
     if "show_chat" not in st.session_state:
@@ -46,10 +48,27 @@ def add_message(role, content):
     st.session_state["block"].message_handler.add_message(role, content)    
 
 
+def render_gif():
+    file_ = open("data/leetlearnai_landing.gif", "rb")
+    contents = file_.read()
+    data_url = base64.b64encode(contents).decode("utf-8")
+    file_.close()
+
+    st.markdown(
+        f'<br><div style="text-align:center;"><img src="data:image/gif;base64,{data_url}" alt="cat gif" style="max-width:85%; height:auto; border:2px solid #ccc;"></div>',
+        unsafe_allow_html=True,
+    )
+
+
+
 def display_landing_page():
     st.title("Welcome to LeetLearn.ai 🧪")
-    st.write("Supercharging the LeetCode grind with a little bit of AI magic.")
+    st.markdown("#### Supercharging the LeetCode grind with a little bit of AI magic.")
+
     api_key = st.text_input("OpenAI API key:", type="password")
+
+    render_gif()
+
     if api_key:
         blocks.set_api_key(api_key)
         st.session_state["api_key"] = api_key
