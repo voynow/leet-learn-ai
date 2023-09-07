@@ -65,7 +65,7 @@ def display_landing_page():
     st.title("Welcome to LeetLearn.ai 🧪")
     st.markdown("#### Supercharging the LeetCode grind with a little bit of AI magic.")
 
-    api_key = st.text_input("OpenAI API key:", type="password")
+    api_key = st.text_input("Enter your OpenAI API key to get started:", type="password")
 
     render_gif()
 
