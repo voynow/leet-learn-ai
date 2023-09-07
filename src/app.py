@@ -1,6 +1,8 @@
 import base64
 import json
 import logging
+
+import openai
 import streamlit as st
 from llm_blocks import block_factory, blocks
 
@@ -13,6 +15,10 @@ Be Concise: Stay focused and be concise. The user's time is extremely valuable a
 Never Reveal Answers: Be very vey conservative with hints, never reveal answers, be as vague as possible.
 Important: When the user shares a problem, let them think through the problem before providing hints.
 """
+
+API_KEY_ERR_MSG = (
+    "ERROR. Invalid API key. Please refresh the page and enter a valid API key"
+)
 
 solutions = json.loads(open("data/solutions_cleaned.json").read())
 logging.basicConfig(level=logging.INFO)
@@ -45,7 +51,7 @@ def add_message(role, content):
     message are for displaying whereas block messages are for the AI
     """
     st.session_state["messages"].append({"role": role, "content": content})
-    st.session_state["block"].message_handler.add_message(role, content)    
+    st.session_state["block"].message_handler.add_message(role, content)
 
 
 def render_gif():
@@ -60,12 +66,13 @@ def render_gif():
     )
 
 
-
 def display_landing_page():
     st.title("Welcome to LeetLearn.ai 🧪")
     st.markdown("#### Supercharging the LeetCode grind with a little bit of AI magic.")
 
-    api_key = st.text_input("Enter your OpenAI API key to get started:", type="password")
+    api_key = st.text_input(
+        "Enter your OpenAI API key to get started:", type="password"
+    )
 
     render_gif()
 
@@ -83,12 +90,17 @@ def stream_response():
     developed specifically to align with streamlit
     """
     message_placeholder = st.empty()
-    full_response = ""
-    for response in st.session_state["block"].completion_handler.create_completion(
-        st.session_state["block"]
-    ):
-        full_response += response.choices[0].delta.get("content", "")
-        message_placeholder.markdown(full_response + "▌")
+
+    try:
+        full_response = ""
+        for response in st.session_state["block"].completion_handler.create_completion(
+            st.session_state["block"]
+        ):
+            full_response += response.choices[0].delta.get("content", "")
+            message_placeholder.markdown(full_response + "▌")
+    except openai.error.AuthenticationError:
+        full_response = API_KEY_ERR_MSG
+
     message_placeholder.markdown(full_response)
     return full_response
 
@@ -121,10 +133,10 @@ def display_messages():
 
 def construct_chat_input(selected_option):
     i = 0
-    for i in range(len(solutions['name'])):
-        if solutions['name'][i] == selected_option:
+    for i in range(len(solutions["name"])):
+        if solutions["name"][i] == selected_option:
             break
-    selected_problem = solutions['problem'][i]
+    selected_problem = solutions["problem"][i]
     return f"{selected_option}\n\n{selected_problem}"
 
 
@@ -133,7 +145,7 @@ def handle_new_selection(selected_option):
     logging.info("New selection made, clearing chat and rerunning.")
     st.session_state.messages = []
     st.session_state.current_selection = selected_option
-    
+
     chat_input = construct_chat_input(selected_option)
     handle_chat(chat_input)
     st.experimental_rerun()
