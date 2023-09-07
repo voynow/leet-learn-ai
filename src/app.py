@@ -113,9 +113,10 @@ def handle_response():
 
 
 def handle_chat(query):
+    query = query.replace("\n", "<br>")
     add_message(USER_ROLE, query)
     with st.chat_message(USER_ROLE):
-        st.markdown(query)
+        st.markdown(query, unsafe_allow_html=True)
     with st.chat_message(BOT_ROLE):
         response = handle_response()
     add_message(BOT_ROLE, response)
