@@ -84,6 +84,14 @@ def display_landing_page():
         st.experimental_rerun()
 
 
+def parse_stream(message_placeholder, response):
+    """Parse and display chunks from response generate"""
+    full_response = ""
+    for chunk in response:
+        full_response += chunk.choices[0].delta.get("content", "")
+        message_placeholder.markdown(full_response + "▌")
+
+
 def stream_response():
     """
     This streaming mechanism is critical to the application and has been
@@ -92,12 +100,10 @@ def stream_response():
     message_placeholder = st.empty()
 
     try:
-        full_response = ""
-        for response in st.session_state["block"].completion_handler.create_completion(
+        response = st.session_state["block"].completion_handler.create_completion(
             st.session_state["block"]
-        ):
-            full_response += response.choices[0].delta.get("content", "")
-            message_placeholder.markdown(full_response + "▌")
+        )
+        full_response = parse_stream(message_placeholder, response)
     except openai.error.AuthenticationError:
         full_response = API_KEY_ERR_MSG
 
