@@ -90,6 +90,7 @@ def parse_stream(message_placeholder, response):
     for chunk in response:
         full_response += chunk.choices[0].delta.get("content", "")
         message_placeholder.markdown(full_response + "▌")
+    return full_response
 
 
 def handle_response():
