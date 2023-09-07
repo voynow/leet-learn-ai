@@ -92,7 +92,7 @@ def parse_stream(message_placeholder, response):
         message_placeholder.markdown(full_response + "▌")
 
 
-def stream_response():
+def handle_response():
     """
     This streaming mechanism is critical to the application and has been
     developed specifically to align with streamlit
@@ -116,7 +116,7 @@ def handle_chat(query):
     with st.chat_message(USER_ROLE):
         st.markdown(query)
     with st.chat_message(BOT_ROLE):
-        response = stream_response()
+        response = handle_response()
     add_message(BOT_ROLE, response)
 
 
