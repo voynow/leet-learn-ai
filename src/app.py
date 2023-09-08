@@ -1,4 +1,5 @@
 import base64
+import datetime
 import json
 import logging
 
@@ -39,6 +40,10 @@ def initialize_app():
         st.session_state.clear_chat = False
 
 
+def log_message(**kwargs):
+    print(json.dumps(kwargs, indent=4))
+
+
 def add_message(role, content):
     """
     Messages are duplicated in the session state and the block. Session state
@@ -46,6 +51,14 @@ def add_message(role, content):
     """
     st.session_state["messages"].append({"role": role, "content": content})
     st.session_state["block"].message_handler.add_message(role, content)
+    log_message(
+        user_id="some_user_id",
+        session_id="some_session_id",
+        problem_id=st.session_state.current_selection,
+        timestamp=datetime.datetime.now().isoformat(),
+        role=role,
+        content=content,
+    )
 
 
 def render_gif():
@@ -157,11 +170,16 @@ def construct_chat_input(selected_option):
     return f"{selected_option}\n\n{selected_problem}"
 
 
+def clear_chat() -> None:
+    st.session_state.messages = []
+    st.session_state.block.message_handler.initialize_messages()
+
+
 def handle_new_selection(selected_option):
     """Clear chat and handle new sidebar selection."""
     logging.info("New selection made, clearing chat and rerunning.")
-    st.session_state.messages = []
     st.session_state.current_selection = selected_option
+    clear_chat()
 
     chat_input = construct_chat_input(selected_option)
     handle_chat(chat_input)
