@@ -2,12 +2,13 @@ import base64
 import datetime
 import json
 import logging
+import uuid
 
-import constants
 import openai
 import streamlit as st
 from llm_blocks import block_factory, blocks
 
+import constants
 
 with open(constants.DATA_PATH, encoding="utf-8") as f:
     solutions = json.load(f)
@@ -26,18 +27,20 @@ def initialize_app():
     if "show_chat" not in st.session_state:
         st.session_state.show_chat = False
     if "block" not in st.session_state:
-        st.session_state["block"] = block_factory.get(
+        st.session_state.block = block_factory.get(
             "chat",
             stream=True,
             system_message=constants.SYS_MESSAGE,
-            model_name="gpt-4",
+            model_name="gpt-3.5-turbo-16k",
         )
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "current_selection" not in st.session_state:
         st.session_state.current_selection = None
-    if "clear_chat" not in st.session_state:
-        st.session_state.clear_chat = False
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+    if "conversation_id" not in st.session_state:
+        st.session_state.conversation_id = str(uuid.uuid4())
 
 
 def log_message(**kwargs):
@@ -49,11 +52,12 @@ def add_message(role, content):
     Messages are duplicated in the session state and the block. Session state
     message are for displaying whereas block messages are for the AI
     """
-    st.session_state["messages"].append({"role": role, "content": content})
-    st.session_state["block"].message_handler.add_message(role, content)
+    st.session_state.messages.append({"role": role, "content": content})
+    st.session_state.block.message_handler.add_message(role, content)
     log_message(
-        user_id="some_user_id",
-        session_id="some_session_id",
+        session_id=st.session_state.session_id,
+        conversation_id=st.session_state.conversation_id,
+        message_id=str(uuid.uuid4()),
         problem_id=st.session_state.current_selection,
         timestamp=datetime.datetime.now().isoformat(),
         role=role,
@@ -86,7 +90,7 @@ def display_landing_page():
 
     if api_key:
         blocks.set_api_key(api_key)
-        st.session_state["api_key"] = api_key
+        st.session_state.api_key = api_key
         add_message(constants.BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
         st.session_state.show_chat = True
         st.experimental_rerun()
@@ -109,8 +113,8 @@ def handle_response():
     message_placeholder = st.empty()
 
     try:
-        response = st.session_state["block"].completion_handler.create_completion(
-            st.session_state["block"]
+        response = st.session_state.block.completion_handler.create_completion(
+            st.session_state.block
         )
         full_response = parse_stream(message_placeholder, response)
     except openai.error.AuthenticationError:
@@ -179,6 +183,7 @@ def handle_new_selection(selected_option):
     """Clear chat and handle new sidebar selection."""
     logging.info("New selection made, clearing chat and rerunning.")
     st.session_state.current_selection = selected_option
+    st.session_state.conversation_id = str(uuid.uuid4())
     clear_chat()
 
     chat_input = construct_chat_input(selected_option)
