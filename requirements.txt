@@ -1,2 +1,3 @@
 llm-blocks
 streamlit
+supabase

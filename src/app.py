@@ -1,17 +1,31 @@
 import base64
+import datetime
 import json
 import logging
+import os
+import uuid
 
-import constants
 import openai
 import streamlit as st
+from supabase import create_client, Client
+
 from llm_blocks import block_factory, blocks
+
+import constants
 
 
 with open(constants.DATA_PATH, encoding="utf-8") as f:
     solutions = json.load(f)
 
 logging.basicConfig(level=logging.INFO)
+
+
+def connect_to_supabase() -> Client:
+    """Connect to Supabase database"""
+    return create_client(
+        os.environ.get("SUPABASE_URL"),
+        os.environ.get("SUPABASE_KEY"),
+    )
 
 
 def initialize_app():
@@ -25,18 +39,36 @@ def initialize_app():
     if "show_chat" not in st.session_state:
         st.session_state.show_chat = False
     if "block" not in st.session_state:
-        st.session_state["block"] = block_factory.get(
+        st.session_state.block = block_factory.get(
             "chat",
             stream=True,
             system_message=constants.SYS_MESSAGE,
             model_name="gpt-4",
         )
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
     if "current_selection" not in st.session_state:
         st.session_state.current_selection = None
-    if "clear_chat" not in st.session_state:
-        st.session_state.clear_chat = False
+    if "session_id" not in st.session_state:
+        st.session_state.session_id = str(uuid.uuid4())
+    if "conversation_id" not in st.session_state:
+        st.session_state.conversation_id = str(uuid.uuid4())
+    if "supabase" not in st.session_state:
+        st.session_state.supabase = connect_to_supabase()
+
+
+def log_message(role, content) -> None:
+    """Log message to console and Supabase database"""
+    messages = st.session_state.supabase.table("messages")
+    transaction = dict(
+        session_id=st.session_state.session_id,
+        conversation_id=st.session_state.conversation_id,
+        message_id=str(uuid.uuid4()),
+        problem_id=st.session_state.current_selection,
+        timestamp=datetime.datetime.now().isoformat(),
+        role=role,
+        content=content,
+    )
+    data, count = messages.insert(transaction).execute()
+    logging.info(f"[{data}, {count}]")
 
 
 def add_message(role, content):
@@ -44,8 +76,8 @@ def add_message(role, content):
     Messages are duplicated in the session state and the block. Session state
     message are for displaying whereas block messages are for the AI
     """
-    st.session_state["messages"].append({"role": role, "content": content})
-    st.session_state["block"].message_handler.add_message(role, content)
+    st.session_state.block.message_handler.add_message(role, content)
+    log_message(role, content)
 
 
 def render_gif():
@@ -73,7 +105,7 @@ def display_landing_page():
 
     if api_key:
         blocks.set_api_key(api_key)
-        st.session_state["api_key"] = api_key
+        st.session_state.api_key = api_key
         add_message(constants.BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
         st.session_state.show_chat = True
         st.experimental_rerun()
@@ -96,8 +128,8 @@ def handle_response():
     message_placeholder = st.empty()
 
     try:
-        response = st.session_state["block"].completion_handler.create_completion(
-            st.session_state["block"]
+        response = st.session_state.block.completion_handler.create_completion(
+            st.session_state.block
         )
         full_response = parse_stream(message_placeholder, response)
     except openai.error.AuthenticationError:
@@ -141,10 +173,13 @@ def setup_sidebar():
 
 def display_messages():
     """Display the chat messages."""
-    logging.info("Displaying %d messages", len(st.session_state.messages))
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"], unsafe_allow_html=True)
+    logging.info(
+        "Displaying %d messages", len(st.session_state.block.message_handler.messages)
+    )
+    for message in st.session_state.block.message_handler.messages:
+        if message["role"] != constants.SYS_ROLE:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"], unsafe_allow_html=True)
 
 
 def construct_chat_input(selected_option):
@@ -160,8 +195,9 @@ def construct_chat_input(selected_option):
 def handle_new_selection(selected_option):
     """Clear chat and handle new sidebar selection."""
     logging.info("New selection made, clearing chat and rerunning.")
-    st.session_state.messages = []
     st.session_state.current_selection = selected_option
+    st.session_state.conversation_id = str(uuid.uuid4())
+    st.session_state.block.message_handler.initialize_messages()
 
     chat_input = construct_chat_input(selected_option)
     handle_chat(chat_input)

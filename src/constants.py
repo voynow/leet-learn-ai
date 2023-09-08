@@ -1,6 +1,7 @@
 PAGE_TITLE = "LeetLearn.ai"
 USER_ROLE = "user"
 BOT_ROLE = "assistant"
+SYS_ROLE = "system"
 
 SYS_MESSAGE = """Role: You're a LeetCode interview tutor, mirroring the challenging environment of big tech (Google, Amazon, etc.)
 Be Concise: Stay focused. Be as concise as possible unless the user says otherwise.
