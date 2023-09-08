@@ -29,11 +29,15 @@ API_KEY_ERR_MSG = (
     "ERROR. Invalid API key. Please refresh the page and enter a valid API key"
 )
 
-solutions = json.loads(open("data/solutions_cleaned.json").read())
+
+f = open("data/solutions_cleaned.json", encoding="utf-8")
+solutions = json.loads(f.read())
+
 logging.basicConfig(level=logging.INFO)
 
 
 def initialize_app():
+    """Initialize the app and set up session state"""
     st.set_page_config(
         page_title=PAGE_TITLE,
         page_icon="🧪",
@@ -64,13 +68,14 @@ def add_message(role, content):
 
 
 def render_gif():
+    """Render the landing page gif"""
     file_ = open("data/leetlearnai_landing.gif", "rb")
     contents = file_.read()
     data_url = base64.b64encode(contents).decode("utf-8")
     file_.close()
 
     st.markdown(
-        f'<br><div style="text-align:center;"><img src="data:image/gif;base64,{data_url}" alt="cat gif" style="max-width:85%; height:auto; border:2px solid #ccc;"></div>',
+        f'<br><div style="text-align:center;"><img src="data:image/gif;base64,{data_url}" alt="demo gif" style="max-width:85%; height:auto; border:2px solid #ccc;"></div>',
         unsafe_allow_html=True,
     )
 
@@ -122,6 +127,7 @@ def handle_response():
 
 
 def handle_chat(query):
+    """Handle user input and bot response."""
     query = query.replace("\n", "<br>")
     add_message(USER_ROLE, query)
     with st.chat_message(USER_ROLE):
@@ -142,13 +148,14 @@ def setup_sidebar():
 
 def display_messages():
     """Display the chat messages."""
-    logging.info(f"Displaying {len(st.session_state.messages)} messages")
+    logging.info("Displaying %d messages", len(st.session_state.messages))
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"], unsafe_allow_html=True)
 
 
 def construct_chat_input(selected_option):
+    """Select problem from solutions data given selected_option"""
     i = 0
     for i in range(len(solutions["name"])):
         if solutions["name"][i] == selected_option:
@@ -169,7 +176,7 @@ def handle_new_selection(selected_option):
 
 
 def display_chat_interface():
-    """Main function to display the chat interface."""
+    """Main function to display the chat interface"""
 
     # Handle sidebar and check for new selections
     selected_option = setup_sidebar()
@@ -190,6 +197,7 @@ def display_chat_interface():
 
 
 def show_page():
+    """Show the landing page or chat interface"""
     if st.session_state.show_chat:
         display_chat_interface()
     else:
