@@ -2,18 +2,30 @@ import base64
 import datetime
 import json
 import logging
+import os
 import uuid
 
 import openai
 import streamlit as st
+from supabase import create_client, Client
+
 from llm_blocks import block_factory, blocks
 
 import constants
+
 
 with open(constants.DATA_PATH, encoding="utf-8") as f:
     solutions = json.load(f)
 
 logging.basicConfig(level=logging.INFO)
+
+
+def connect_to_supabase() -> Client:
+    """Connect to Supabase database"""
+    return create_client(
+        os.environ.get("SUPABASE_URL"),
+        os.environ.get("SUPABASE_KEY"),
+    )
 
 
 def initialize_app():
@@ -31,7 +43,7 @@ def initialize_app():
             "chat",
             stream=True,
             system_message=constants.SYS_MESSAGE,
-            model_name="gpt-3.5-turbo-16k",
+            model_name="gpt-4",
         )
     if "current_selection" not in st.session_state:
         st.session_state.current_selection = None
@@ -39,19 +51,14 @@ def initialize_app():
         st.session_state.session_id = str(uuid.uuid4())
     if "conversation_id" not in st.session_state:
         st.session_state.conversation_id = str(uuid.uuid4())
+    if "supabase" not in st.session_state:
+        st.session_state.supabase = connect_to_supabase()
 
 
-def log_message(**kwargs):
-    print(json.dumps(kwargs, indent=4))
-
-
-def add_message(role, content):
-    """
-    Messages are duplicated in the session state and the block. Session state
-    message are for displaying whereas block messages are for the AI
-    """
-    st.session_state.block.message_handler.add_message(role, content)
-    log_message(
+def log_message(role, content) -> None:
+    """Log message to console and Supabase database"""
+    messages = st.session_state.supabase.table("messages")
+    transaction = dict(
         session_id=st.session_state.session_id,
         conversation_id=st.session_state.conversation_id,
         message_id=str(uuid.uuid4()),
@@ -60,6 +67,17 @@ def add_message(role, content):
         role=role,
         content=content,
     )
+    data, count = messages.insert(transaction).execute()
+    logging.info(f"[{data}, {count}]")
+
+
+def add_message(role, content):
+    """
+    Messages are duplicated in the session state and the block. Session state
+    message are for displaying whereas block messages are for the AI
+    """
+    st.session_state.block.message_handler.add_message(role, content)
+    log_message(role, content)
 
 
 def render_gif():
