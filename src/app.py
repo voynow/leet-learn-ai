@@ -33,8 +33,6 @@ def initialize_app():
             system_message=constants.SYS_MESSAGE,
             model_name="gpt-3.5-turbo-16k",
         )
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
     if "current_selection" not in st.session_state:
         st.session_state.current_selection = None
     if "session_id" not in st.session_state:
@@ -52,7 +50,6 @@ def add_message(role, content):
     Messages are duplicated in the session state and the block. Session state
     message are for displaying whereas block messages are for the AI
     """
-    st.session_state.messages.append({"role": role, "content": content})
     st.session_state.block.message_handler.add_message(role, content)
     log_message(
         session_id=st.session_state.session_id,
@@ -158,10 +155,13 @@ def setup_sidebar():
 
 def display_messages():
     """Display the chat messages."""
-    logging.info("Displaying %d messages", len(st.session_state.messages))
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"], unsafe_allow_html=True)
+    logging.info(
+        "Displaying %d messages", len(st.session_state.block.message_handler.messages)
+    )
+    for message in st.session_state.block.message_handler.messages:
+        if message["role"] != constants.SYS_ROLE:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"], unsafe_allow_html=True)
 
 
 def construct_chat_input(selected_option):
@@ -174,17 +174,12 @@ def construct_chat_input(selected_option):
     return f"{selected_option}\n\n{selected_problem}"
 
 
-def clear_chat() -> None:
-    st.session_state.messages = []
-    st.session_state.block.message_handler.initialize_messages()
-
-
 def handle_new_selection(selected_option):
     """Clear chat and handle new sidebar selection."""
     logging.info("New selection made, clearing chat and rerunning.")
     st.session_state.current_selection = selected_option
     st.session_state.conversation_id = str(uuid.uuid4())
-    clear_chat()
+    st.session_state.block.message_handler.initialize_messages()
 
     chat_input = construct_chat_input(selected_option)
     handle_chat(chat_input)
