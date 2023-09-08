@@ -2,36 +2,14 @@ import base64
 import json
 import logging
 
+import constants
 import openai
 import streamlit as st
 from llm_blocks import block_factory, blocks
 
-PAGE_TITLE = "LeetLearn.ai"
-USER_ROLE = "user"
-BOT_ROLE = "assistant"
 
-SYS_MESSAGE = """Role: You're a LeetCode interview tutor, mirroring the challenging environment of big tech (Google, Amazon, etc.)
-Be Concise: Stay focused. Be as concise as possible unless the user says otherwise.
-Never Reveal Answers: It is critical that you never give away the answer. This is a learning tool, not a cheat sheet.
-Don't give hints: Ask questions that will help the user get to the answer on their own. When a user asks for a hint, try your best not to give the answer away.
-
-Example:
-
-(LeetCode problem median-of-two-sorted-arrays)
-...
-user: Can you combine them first?
-assistant: You could, but merging the two arrays would take O(m+n) time, which doesn't meet the requirement of O(log(m+n)) time complexity. Instead, consider how binary search could be used in this problem. How might you apply it to find the median?
-
-This example highlights a bad response. It was good, until the assistant gave away that you need binary search.
-"""
-
-API_KEY_ERR_MSG = (
-    "ERROR. Invalid API key. Please refresh the page and enter a valid API key"
-)
-
-
-f = open("data/solutions_cleaned.json", encoding="utf-8")
-solutions = json.loads(f.read())
+with open(constants.DATA_PATH, encoding="utf-8") as f:
+    solutions = json.load(f)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 def initialize_app():
     """Initialize the app and set up session state"""
     st.set_page_config(
-        page_title=PAGE_TITLE,
+        page_title=constants.PAGE_TITLE,
         page_icon="🧪",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -48,7 +26,10 @@ def initialize_app():
         st.session_state.show_chat = False
     if "block" not in st.session_state:
         st.session_state["block"] = block_factory.get(
-            "chat", stream=True, system_message=SYS_MESSAGE, model_name="gpt-4"
+            "chat",
+            stream=True,
+            system_message=constants.SYS_MESSAGE,
+            model_name="gpt-4",
         )
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -93,7 +74,7 @@ def display_landing_page():
     if api_key:
         blocks.set_api_key(api_key)
         st.session_state["api_key"] = api_key
-        add_message(BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
+        add_message(constants.BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
         st.session_state.show_chat = True
         st.experimental_rerun()
 
@@ -120,21 +101,33 @@ def handle_response():
         )
         full_response = parse_stream(message_placeholder, response)
     except openai.error.AuthenticationError:
-        full_response = API_KEY_ERR_MSG
+        full_response = constants.API_KEY_ERR_MSG
 
     message_placeholder.markdown(full_response)
     return full_response
 
 
+def enrich_query(query):
+    """Enrich query with HTML tags to improve readability"""
+    replace_map = {
+        "\n": "<br>",
+        "    ": "&nbsp;&nbsp;&nbsp;&nbsp;",
+        "  ": "&nbsp;&nbsp;",
+    }
+    for key, value in replace_map.items():
+        query = query.replace(key, value)
+    return query
+
+
 def handle_chat(query):
     """Handle user input and bot response."""
-    query = query.replace("\n", "<br>")
-    add_message(USER_ROLE, query)
-    with st.chat_message(USER_ROLE):
+    query = enrich_query(query)
+    add_message(constants.USER_ROLE, query)
+    with st.chat_message(constants.USER_ROLE):
         st.markdown(query, unsafe_allow_html=True)
-    with st.chat_message(BOT_ROLE):
+    with st.chat_message(constants.BOT_ROLE):
         response = handle_response()
-    add_message(BOT_ROLE, response)
+    add_message(constants.BOT_ROLE, response)
 
 
 def setup_sidebar():
@@ -187,7 +180,7 @@ def display_chat_interface():
         return
 
     # Display main interface
-    st.title(PAGE_TITLE)
+    st.title(constants.PAGE_TITLE)
     display_messages()
 
     # Handle user input
