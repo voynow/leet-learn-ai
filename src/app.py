@@ -2,31 +2,22 @@ import base64
 import json
 import logging
 
+import constants
 import openai
 import streamlit as st
 from llm_blocks import block_factory, blocks
 
-PAGE_TITLE = "LeetLearn.ai"
-USER_ROLE = "user"
-BOT_ROLE = "assistant"
 
-SYS_MESSAGE = """Role: You are a LeetCode interview tutor, mirroring the challenging yet encouraging environment of elite tech firms like Google, Amazon, etc.
-Be Concise: Stay focused and be concise. The user's time is extremely valuable and every word you respond with takes some of the user's time.
-Never Reveal Answers: Be very vey conservative with hints, never reveal answers, be as vague as possible.
-Important: When the user shares a problem, let them think through the problem before providing hints.
-"""
+with open(constants.DATA_PATH, encoding="utf-8") as f:
+    solutions = json.load(f)
 
-API_KEY_ERR_MSG = (
-    "ERROR. Invalid API key. Please refresh the page and enter a valid API key"
-)
-
-solutions = json.loads(open("data/solutions_cleaned.json").read())
 logging.basicConfig(level=logging.INFO)
 
 
 def initialize_app():
+    """Initialize the app and set up session state"""
     st.set_page_config(
-        page_title=PAGE_TITLE,
+        page_title=constants.PAGE_TITLE,
         page_icon="🧪",
         layout="wide",
         initial_sidebar_state="expanded",
@@ -35,7 +26,10 @@ def initialize_app():
         st.session_state.show_chat = False
     if "block" not in st.session_state:
         st.session_state["block"] = block_factory.get(
-            "chat", stream=True, system_message=SYS_MESSAGE, model_name="gpt-4"
+            "chat",
+            stream=True,
+            system_message=constants.SYS_MESSAGE,
+            model_name="gpt-4",
         )
     if "messages" not in st.session_state:
         st.session_state.messages = []
@@ -55,13 +49,14 @@ def add_message(role, content):
 
 
 def render_gif():
+    """Render the landing page gif"""
     file_ = open("data/leetlearnai_landing.gif", "rb")
     contents = file_.read()
     data_url = base64.b64encode(contents).decode("utf-8")
     file_.close()
 
     st.markdown(
-        f'<br><div style="text-align:center;"><img src="data:image/gif;base64,{data_url}" alt="cat gif" style="max-width:85%; height:auto; border:2px solid #ccc;"></div>',
+        f'<br><div style="text-align:center;"><img src="data:image/gif;base64,{data_url}" alt="demo gif" style="max-width:85%; height:auto; border:2px solid #ccc;"></div>',
         unsafe_allow_html=True,
     )
 
@@ -79,7 +74,7 @@ def display_landing_page():
     if api_key:
         blocks.set_api_key(api_key)
         st.session_state["api_key"] = api_key
-        add_message(BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
+        add_message(constants.BOT_ROLE, "Hello! I am LeetLearn AI. Lets get coding!")
         st.session_state.show_chat = True
         st.experimental_rerun()
 
@@ -106,19 +101,33 @@ def handle_response():
         )
         full_response = parse_stream(message_placeholder, response)
     except openai.error.AuthenticationError:
-        full_response = API_KEY_ERR_MSG
+        full_response = constants.API_KEY_ERR_MSG
 
     message_placeholder.markdown(full_response)
     return full_response
 
 
+def enrich_query(query):
+    """Enrich query with HTML tags to improve readability"""
+    replace_map = {
+        "\n": "<br>",
+        "    ": "&nbsp;&nbsp;&nbsp;&nbsp;",
+        "  ": "&nbsp;&nbsp;",
+    }
+    for key, value in replace_map.items():
+        query = query.replace(key, value)
+    return query
+
+
 def handle_chat(query):
-    add_message(USER_ROLE, query)
-    with st.chat_message(USER_ROLE):
-        st.markdown(query)
-    with st.chat_message(BOT_ROLE):
+    """Handle user input and bot response."""
+    query = enrich_query(query)
+    add_message(constants.USER_ROLE, query)
+    with st.chat_message(constants.USER_ROLE):
+        st.markdown(query, unsafe_allow_html=True)
+    with st.chat_message(constants.BOT_ROLE):
         response = handle_response()
-    add_message(BOT_ROLE, response)
+    add_message(constants.BOT_ROLE, response)
 
 
 def setup_sidebar():
@@ -132,13 +141,14 @@ def setup_sidebar():
 
 def display_messages():
     """Display the chat messages."""
-    logging.info(f"Displaying {len(st.session_state.messages)} messages")
+    logging.info("Displaying %d messages", len(st.session_state.messages))
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+            st.markdown(message["content"], unsafe_allow_html=True)
 
 
 def construct_chat_input(selected_option):
+    """Select problem from solutions data given selected_option"""
     i = 0
     for i in range(len(solutions["name"])):
         if solutions["name"][i] == selected_option:
@@ -159,7 +169,7 @@ def handle_new_selection(selected_option):
 
 
 def display_chat_interface():
-    """Main function to display the chat interface."""
+    """Main function to display the chat interface"""
 
     # Handle sidebar and check for new selections
     selected_option = setup_sidebar()
@@ -170,7 +180,7 @@ def display_chat_interface():
         return
 
     # Display main interface
-    st.title(PAGE_TITLE)
+    st.title(constants.PAGE_TITLE)
     display_messages()
 
     # Handle user input
@@ -180,6 +190,7 @@ def display_chat_interface():
 
 
 def show_page():
+    """Show the landing page or chat interface"""
     if st.session_state.show_chat:
         display_chat_interface()
     else:
