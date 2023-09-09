@@ -10,5 +10,7 @@ ignore = [
     "scripts",
     "*.ipynb",
     "LICENSE",
-    ".gitignore"
+    ".gitignore",
+    ".env",
+    ".mypy_cache",
 ]
