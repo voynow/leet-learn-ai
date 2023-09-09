@@ -103,6 +103,12 @@ def display_landing_page():
 
     render_gif()
 
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    st.markdown("#### About")
+    st.markdown("- [github.com/voynow/LeetLearn.ai](github.com/voynow/LeetLearn.ai)")
+    st.markdown("- [twitter.com/voynow](twitter.com/voynow)")
+    st.markdown("- [linkedin.com/in/voynow](linkedin.com/in/voynow)")
+
     if api_key:
         blocks.set_api_key(api_key)
         st.session_state.api_key = api_key
@@ -164,10 +170,10 @@ def handle_chat(query):
 
 def setup_sidebar():
     """Set up the sidebar with selectable options."""
-    st.sidebar.title("Options Dropdown")
+    st.sidebar.title("Stuck on Leetcode?")
     options = [None] + solutions["name"]
     return st.sidebar.selectbox(
-        label="Choose an option:", options=options, key="selection"
+        label="Choose an problem:", options=options, key="selection"
     )
 
 
