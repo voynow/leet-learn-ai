@@ -105,9 +105,9 @@ def display_landing_page():
 
     st.markdown("<br><br>", unsafe_allow_html=True)
     st.markdown("#### About")
-    st.markdown("- [github.com/voynow/LeetLearn.ai](github.com/voynow/LeetLearn.ai)")
-    st.markdown("- [twitter.com/voynow](twitter.com/voynow)")
-    st.markdown("- [linkedin.com/in/voynow](linkedin.com/in/voynow)")
+    st.markdown("- [github.com/voynow/leet-learn-ai](github.com/voynow/leet-learn-ai)")
+    st.markdown("- [twitter.com/jamievoynow](twitter.com/jamievoynow)")
+    st.markdown("- [linkedin.com/in/voynow](www.linkedin.com/in/voynow/)")
 
     if api_key:
         blocks.set_api_key(api_key)
