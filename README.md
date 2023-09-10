@@ -1,5 +1,13 @@
 # LeetLearn.ai 🧠
 
+#### Link to the app: https://leet-learn-ai.streamlit.app/
+#### Note: an OpenAI API key is required to run the app. Please refer to https://platform.openai.com/ for more information. If this is your first time using OpenAI, you are in luck, they will give you some free credits to get started!
+<br>
+
+
+
+## What is LeetLearn.ai? 🤔
+
 LeetLearn.ai is a powerful AI-powered tutoring tool designed to supercharge your LeetCode grind. It leverages the power of AI to provide a hyper-personalized learning experience, mirroring the challenging environment of big tech companies like Google and Amazon.
 
 ## Why Use LeetLearn.ai? 🚀
